@@ -1268,7 +1268,7 @@ public class SettingsActivity extends Activity {
                     Ui.tr("Prime Video button"), Ui.tr("YouTube button"),
                     Ui.tr("Crunchyroll button"), Ui.tr("Google Play button")};
             return new String[] {Ui.tr("Netflix button"), Ui.tr("YouTube button"),
-                    Ui.tr("Prime Video button"), Ui.tr("TCL Channel button")};
+                    Ui.tr("Prime Video button"), Ui.tr("TCL Channel button"), Ui.tr("Settings button")};
         }
 
         private String[] keyValues() {
@@ -1298,6 +1298,17 @@ public class SettingsActivity extends Activity {
                 appLabels.add(Ui.tr("Inputs"));
                 appPkgs.add(Prefs.QUICK_SETTINGS);
                 appLabels.add(Ui.tr("Quick Settings"));
+            }
+            if (RemoteKeys.TCL) {
+                appPkgs.add(Prefs.QUICK_PANEL);
+                appLabels.add(Ui.tr("Quick Settings"));
+                // The Settings button's default, listed even where TV Settings has no launcher entry.
+                boolean listed = false;
+                for (String[] f : found) listed |= f[0].equals("com.android.tv.settings");
+                if (!listed) {
+                    appPkgs.add("com.android.tv.settings");
+                    appLabels.add(Ui.tr("TV Settings"));
+                }
             }
             // On Xiaomi the Mi button is the remote's Home button: it can open this home screen.
             if (RemoteKeys.XIAOMI) {

@@ -25,6 +25,10 @@ final class Prefs {
 
     /** Remote keys we handle, with the app each opens until the user picks another. Codes read from the TCL's log. */
     static final int KEY_NETFLIX = 4062, KEY_YOUTUBE = 190, KEY_PRIME = 4099, KEY_TCL_CHANNEL = 4020;
+    /** TCL's Settings button: NOTIFICATION, which only Google TV's home app (off in our mode) answers. */
+    static final int KEY_TCL_SETTINGS = KeyEvent.KEYCODE_NOTIFICATION;
+    /** A TCL Settings button's value that opens our quick settings panel over what's playing. */
+    static final String QUICK_PANEL = HomeMode.PKG + "#panel";
     /** The Netflix button on Vestel TVs and Formovie projectors: STEM_1, which the TV hands to its Netflix key receiver (dumpsys window policy). */
     static final int KEY_STEM_NETFLIX = KeyEvent.KEYCODE_STEM_1;
     /** KTC's (NextStar) Tabii button: BUTTON_8, which the TV hands to its hot-key receiver (its log: "keycode = 195"). */
@@ -78,7 +82,7 @@ final class Prefs {
             : RemoteKeys.XIAOMI_PATCHWALL_ONLY ? new int[] {KEY_XIAOMI_PATCHWALL}
             : RemoteKeys.XIAOMI ? new int[] {KEY_MI, KEY_YOUTUBE, KEY_XIAOMI_PATCHWALL, KEY_XIAOMI_OKKO, KEY_XIAOMI_VK,
                     KEY_XIAOMI_RUTUBE, KEY_XIAOMI_KION, KEY_XIAOMI_WINK, KEY_XIAOMI_IVI}
-            : new int[] {KEY_NETFLIX, KEY_YOUTUBE, KEY_PRIME, KEY_TCL_CHANNEL};
+            : new int[] {KEY_NETFLIX, KEY_YOUTUBE, KEY_PRIME, KEY_TCL_CHANNEL, KEY_TCL_SETTINGS};
 
     /** Bumped by every change: screens compare it to know when to redraw. */
     static volatile int version;
@@ -410,6 +414,7 @@ final class Prefs {
             case KEY_YOUTUBE: return "com.google.android.youtube.tv";
             case KEY_PRIME: return "com.amazon.amazonvideo.livingroom";
             case KEY_TCL_CHANNEL: return "";
+            case KEY_TCL_SETTINGS: return "com.android.tv.settings";   // TV Settings, as from our home screen (#289)
             case KEY_MI: return HomeMode.PKG;   // our home screen: the remote has no other Home button
             default: return "";
         }
@@ -424,6 +429,8 @@ final class Prefs {
 
     private static final String[] keyApps = new String[KEYS.length];   // null = the default
     private static long keysStamp = Long.MIN_VALUE;
+    /** Every button saved as Nothing (the key service off): a button added since stays Nothing too, not its default. */
+    private static boolean keysAllOff;
 
     /** A temporary file per process (two can start together after an update), synced before it replaces the old one. */
     private static boolean writeKeys(String text) {
@@ -459,6 +466,7 @@ final class Prefs {
             if (stamp != keysStamp) {
                 keysStamp = stamp;
                 java.util.Arrays.fill(keyApps, null);
+                keysAllOff = false;
                 if (stamp != 0) {
                     try (BufferedReader r = new BufferedReader(new FileReader(f))) {
                         String line;
@@ -470,10 +478,13 @@ final class Prefs {
                         }
                     } catch (IOException ignored) {
                     }
+                    boolean saved = false, on = false;
+                    for (String v : keyApps) if (v != null) { saved = true; on |= !v.isEmpty(); }
+                    keysAllOff = saved && !on;
                 }
             }
             for (int i = 0; i < KEYS.length; i++) if (KEYS[i] == keyCode && keyApps[i] != null) return keyApps[i];
-            return defaultApp(keyCode);
+            return keysAllOff ? "" : defaultApp(keyCode);
         }
     }
 
