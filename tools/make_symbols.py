@@ -20,6 +20,8 @@ MAP = {
     "live_tv": ("live_tv", 1), "bitcoin": ("currency_bitcoin", 0), "recents": ("view_carousel", 0),
     "wifi": ("wifi", 1), "ethernet": ("lan", 1), "bluetooth": ("bluetooth_connected", 1), "usb": ("usb", 1),
     "keystone": ("settings_overscan", 1), "cast": ("cast", 1),
+    "lightbulb": ("lightbulb", 1), "toggle": ("toggle_on", 1), "fan": ("mode_fan", 1), "blinds": ("blinds", 1),
+    "bolt": ("bolt", 1), "smart_button": ("smart_button", 1),
 }
 
 

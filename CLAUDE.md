@@ -418,6 +418,18 @@ entries; its system pieces are in `PROTECTED`. USB debugging opens ADB on 5555 t
   only while something moves, hides the layers under it once it covers the screen, and TalkBack reads its cards
   (`RECENT_CARDS`) instead of the home screen. Once closed (`isOpen()`), while it fades out, the keys and TalkBack are
   the home screen's again.
+- Home Assistant buttons (`HomeAssistant`): `home_assistant_url` and `_entities` in `config.properties` go into the build
+  (`Config.HOME_ASSISTANT`: only then does Home Settings have its *Home Assistant* row, off by default). The token never
+  does (any app can read an installed APK, and a token reaches every service): it's theirs and secret, like `tmdb_key`,
+  and they send it themselves with `python3 tools/send_key.py <IP> home_assistant_token` (`Secrets`, as the Immich key;
+  it checks the token with the server and lists what each entity becomes first; don't ask for it in the chat). Until
+  it's there the row shows Unavailable (`Capabilities.NEED_HOME_ASSISTANT`). On, the entities are a
+  third group of tiles in the bottom drawer (`HomeApps.HOME_ASSISTANT`), read when it opens and every 30 s while it's
+  open, and OK calls their service (`/api/services`). Only `HomeAssistant.DOMAINS`, at most 8: locks and alarms are
+  never offered, and covers only of `HomeAssistant.SAFE_COVERS` (awning, blind, curtain, shade, shutter; not garage
+  doors, gates, doors or a cover with no class), once its class is read. The UI thread never reads the token file
+  (`itemsNow`, `onNow`). Redirects aren't followed. The address goes through `lan_server` in `build.sh`: plain HTTP
+  only to the local network.
 - What's playing (`NowPlaying`) comes from the apps' media sessions, which Android hands only to an allowed notification
   listener. A listener could read every notification, so ours follows Home Settings' *Now Playing widget* (off by
   default): turning it on allows it through ADB (`HomeMode.nowPlayingAccess`, `cmd notification allow_listener`; the

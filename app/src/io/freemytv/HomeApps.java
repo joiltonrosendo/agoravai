@@ -60,6 +60,8 @@ final class HomeApps {
     static final int INPUTS = 7;
     /** The Recent Apps switcher (the home screen opens it). */
     static final int RECENTS = 8;
+    /** A Home Assistant entity in the drawer (HomeAssistant): OK calls its service, nothing opens. */
+    static final int HOME_ASSISTANT = 9;
     /** Image size of each card (16:9; on screen it shows up to ~330 px wide). */
     static final int TILE_W = 384, TILE_H = 216;
 
@@ -76,6 +78,7 @@ final class HomeApps {
         float logoInk;      // fraction of the logo with ink (thin logos are drawn larger, with the same "weight")
         float logoScale = 1; // size tweak by eye (compact logos need more)
         boolean connected = true;
+        HomeAssistant.Control control;   // HOME_ASSISTANT: the entity it shows and calls
 
         void setTile(Bitmap b) {
             tile = b;
@@ -318,6 +321,13 @@ final class HomeApps {
         it.key = key;
         it.label = label;
         it.symbol = symbol;
+        return it;
+    }
+
+    /** A Home Assistant tile in the drawer, named by the server (HomeAssistant.items). */
+    static Item homeAssistant(HomeAssistant.Control ctl, String symbol) {
+        Item it = shortcut(HOME_ASSISTANT, "ha:" + ctl.entity, ctl.name, symbol);
+        it.control = ctl;
         return it;
     }
 

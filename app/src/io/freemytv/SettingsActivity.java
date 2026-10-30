@@ -937,10 +937,12 @@ public class SettingsActivity extends Activity {
                 CLOCKS = {"auto", "24", "12"};
         /** Home Settings: language, temperature, theme, clock, my photos, sounds, top of the screen, picks, Continue
          *  Watching's apps, watch from the screensaver, Android apps, status icons, Recent Apps, weather, city, forecast,
-         *  now playing, quotes, one row per coin, then the TMDB key and updates (the last row). */
+         *  now playing, Home Assistant (only on builds with its address), quotes, one row per coin, then the TMDB key and
+         *  updates (the last row). */
         private static final int CLOCK_ROW = 3, PHOTOS_ROW = 4, TOP_ROW = 6, PICKS_ROW = 7, WATCH_ROW = 8,
                 SAVER_ROW = 9, ANDROID_APPS_ROW = 10, STATUS_ICONS_ROW = 11, RECENTS_ROW = 12, WEATHER_ROW = 13, CITY_ROW = 14,
-                FORECAST_ROW = 15, PLAYING_ROW = 16, QUOTES_ROW = 17, COIN_ROWS = 18;
+                FORECAST_ROW = 15, PLAYING_ROW = 16, HOME_ROW = Config.HOME_ASSISTANT ? 17 : -1,
+                QUOTES_ROW = Config.HOME_ASSISTANT ? 18 : 17, COIN_ROWS = QUOTES_ROW + 1;
         /** No "home" on Xiaomi TVs: their remote sends one Home press as a burst of presses (HomeView.BURST_MS). */
         private static final String[] RECENTS = RemoteKeys.XIAOMI ? new String[] {"off", "drawer"}
                 : new String[] {"off", "drawer", "home"};
@@ -970,6 +972,7 @@ public class SettingsActivity extends Activity {
             l.add(Ui.tr("City"));
             l.add(Ui.tr("Forecast"));
             l.add(Ui.tr("Now Playing widget"));
+            if (HOME_ROW >= 0) l.add("Home Assistant");
             l.add(Ui.tr("Quotes widget"));
             l.add("Bitcoin");
             l.add("Ethereum");
@@ -1071,6 +1074,7 @@ public class SettingsActivity extends Activity {
             v[CITY_ROW] = !cityStatus.isEmpty() ? cityStatus : Prefs.city().isEmpty() ? "—" : Prefs.city();
             v[FORECAST_ROW] = Prefs.forecast().equals("days") ? Ui.tr("Next days") : Ui.tr("Next hours");
             v[PLAYING_ROW] = onOff(Prefs.nowPlaying());
+            if (HOME_ROW >= 0) v[HOME_ROW] = onOff(HomeAssistant.on(getContext()));
             v[QUOTES_ROW] = onOff(Prefs.quotes());
             // No quotes widget, nowhere to show prices: the coins read as off (and stay locked) until it is back on.
             for (int i = COIN_ROWS; i < v.length - 2; i++) v[i] = onOff(Prefs.quotes() && Prefs.coin(i - COIN_ROWS));
@@ -1097,7 +1101,8 @@ public class SettingsActivity extends Activity {
                 case MAIN:
                     return i == 5 ? Capabilities.NEED_REMOTE_BUTTONS : i == 6 ? Capabilities.NEED_ADB : null;
                 case HOME_SETTINGS:
-                    return pickScroll + i == PLAYING_ROW ? Capabilities.NEED_LISTENER : null;
+                    return pickScroll + i == PLAYING_ROW ? Capabilities.NEED_LISTENER
+                            : pickScroll + i == HOME_ROW ? Capabilities.NEED_HOME_ASSISTANT : null;
                 case POWER: {
                     int id = powerRows()[i];
                     return id == P_WHERE ? Capabilities.NEED_OVERLAY : null;
@@ -1411,6 +1416,10 @@ public class SettingsActivity extends Activity {
                     Prefs.setNowPlaying(!Prefs.nowPlaying());
                     HomeMode.nowPlayingAccess(getContext());
                     break;
+                case HOME_ROW:   // off: what it read is forgotten, and nothing is asked of the server until it's on again
+                    Prefs.setHomeAssistant(!Prefs.homeAssistant());
+                    if (!Prefs.homeAssistant()) HomeAssistant.forget(getContext());
+                    return;
                 case QUOTES_ROW: Prefs.setQuotes(!Prefs.quotes()); break;
                 default:
                     if (row >= keyRow() || !Prefs.quotes()) return;   // the key and Updates act on OK only
